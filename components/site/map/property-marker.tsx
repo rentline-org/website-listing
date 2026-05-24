@@ -7,9 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  Building2,
   Home,
-  TreePine,
   BedDouble,
   Bath,
   Ruler,
@@ -78,17 +76,32 @@ function getPropertyThumbnail(property: IProperty): string | null {
   );
 }
 
-// function getPropertyIcon(propertyType: IProperty["property_type"]) {
-//   switch (propertyType) {
-//     case "multi_unit":
-//       return <Building2 />;
-//     case "land":
-//       return <TreePine />;
-//     case "single_unit":
-//     default:
-//       return <Home />;
-//   }
-// }
+function getMarkerTheme(propertyType: IProperty["property_type"]) {
+  switch (propertyType) {
+    case "multi_unit":
+      return {
+        label: "Multi Unit",
+        primary: "#047857",
+        stroke: "#a7f3d0",
+        iconBg: "#047857",
+      };
+    case "land":
+      return {
+        label: "Land",
+        primary: "#b45309",
+        stroke: "#fde68a",
+        iconBg: "#b45309",
+      };
+    case "single_unit":
+    default:
+      return {
+        label: "Home",
+        primary: "#18181b",
+        stroke: "#e4e4e7",
+        iconBg: "#18181b",
+      };
+  }
+}
 
 function getMarkerSummary(property: IProperty) {
   const primaryUnit = getPrimaryUnit(property);
@@ -131,6 +144,7 @@ function MarkerView({
   const Icon = getPropertyIcon(property.property_type);
   const price = getPropertyPrice(property);
   const priceLabel = formatFullPrice(price);
+  const theme = getMarkerTheme(property.property_type);
 
   return (
     <button
@@ -169,8 +183,8 @@ function MarkerView({
             <path
               filter="url(#marker-shadow)"
               d="M60 6C34.6 6 14 26.6 14 52c0 27.8 21.2 50.8 36.4 73.6 3.8 5.7 7.4 11.6 9.6 18.4 2.2-6.8 5.8-12.7 9.6-18.4C85.8 102.8 107 79.8 107 52 107 26.6 86.4 6 60 6Z"
-              fill={selected ? "#6b26d9" : "#ffffff"}
-              stroke={selected ? "#6b26d9" : "#e4e4e7"}
+              fill={selected ? theme.primary : "#ffffff"}
+              stroke={selected ? theme.primary : theme.stroke}
               strokeWidth="2"
             />
           </svg>
@@ -180,9 +194,17 @@ function MarkerView({
               className={[
                 "flex h-10 w-10 items-center justify-center rounded-full border shadow-sm transition-all duration-200",
                 selected
-                  ? "bg-white text-zinc-900 border-white"
-                  : "bg-primary text-white border-primary",
+                  ? "border-white bg-white text-zinc-900"
+                  : "text-white",
               ].join(" ")}
+              style={
+                selected
+                  ? undefined
+                  : {
+                      backgroundColor: theme.iconBg,
+                      borderColor: theme.iconBg,
+                    }
+              }
             >
               <div className="scale-[0.9]">
                 {React.cloneElement(Icon, {
@@ -212,6 +234,7 @@ function PropertyPopup({ property }: { property: IProperty }) {
   const primaryUnit = getPrimaryUnit(property);
   const price = getPropertyPrice(property);
   const summary = getMarkerSummary(property);
+  const theme = getMarkerTheme(property.property_type);
 
   // const locationLine = [property.city, property.state, property.country]
   //   .filter(Boolean)
@@ -241,18 +264,20 @@ function PropertyPopup({ property }: { property: IProperty }) {
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                  {property.property_type === "multi_unit"
-                    ? "Multi Unit"
-                    : property.property_type === "land"
-                      ? "Land"
-                      : "Home"}
+                  {theme.label}
                 </p>
                 <h4 className="mt-1 truncate text-sm font-bold text-zinc-900">
                   {property.title}
                 </h4>
               </div>
 
-              <Badge className="shrink-0 rounded-full bg-zinc-900 text-white border-zinc-900 text-[10px]">
+              <Badge
+                className="shrink-0 rounded-full border text-[10px] text-white"
+                style={{
+                  backgroundColor: theme.primary,
+                  borderColor: theme.primary,
+                }}
+              >
                 {price != null ? `$${price.toLocaleString()}` : "Request"}
               </Badge>
             </div>

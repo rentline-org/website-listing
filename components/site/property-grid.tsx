@@ -5,13 +5,11 @@ import PropertyCard from "./property-card";
 
 interface PropertyGridProps {
   properties: IProperty[] | null;
-  subdomain: string;
   currency?: string;
 }
 
 export default function PropertyGrid({
   properties,
-  subdomain,
   currency = "USD",
 }: PropertyGridProps) {
   const hasProperties = properties && properties.length > 0;
@@ -53,7 +51,6 @@ export default function PropertyGrid({
               <PropertyCard
                 key={property.id}
                 property={property}
-                subdomain={subdomain}
                 currency={currency}
               />
             ))}

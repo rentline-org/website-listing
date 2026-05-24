@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import bbox from "@turf/bbox";
-import { SearchBox } from "@mapbox/search-js-react";
 import { useMapContext } from "./map-provider";
 import { ENV_VARS } from "@/lib/env";
 import { IOrganizationData, IProperty } from "@/lib/types";
@@ -33,7 +32,6 @@ export default function PropertyMap({
     filteredProperties,
     selectedProperty,
     setSelectedProperty,
-    orgCountry,
   } = useMapContext();
 
   const fitMapToBounds = (map: mapboxgl.Map, properties: IProperty[]) => {
@@ -155,21 +153,6 @@ export default function PropertyMap({
 
   return (
     <div className="relative w-full h-full bg-zinc-100">
-      <div className="absolute top-40 md:top-16 left-4 z-10 w-80 max-w-[calc(100vw-2rem)]">
-        {ENV_VARS.nextPublicMapboxToken && (
-          <SearchBox
-            accessToken={ENV_VARS.nextPublicMapboxToken}
-            map={mapInstance}
-            mapboxgl={mapboxgl}
-            options={{
-              country: orgCountry.toLowerCase(),
-              limit: 5,
-            }}
-            marker
-          />
-        )}
-      </div>
-
       <div ref={mapContainer} className="w-full h-full" />
 
       {mapLoaded &&

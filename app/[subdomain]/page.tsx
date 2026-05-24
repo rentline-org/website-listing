@@ -1,26 +1,25 @@
-// 'use clo'
-
-import { notFound } from "next/navigation";
-import { getWebsiteListingByDomain } from "../actions";
-import Navbar from "@/components/site/navbar";
-import { MapProvider } from "@/components/site/map/map-provider";
 import dynamic from "next/dynamic";
+import { notFound } from "next/navigation";
+
+import { getWebsiteListingByDomain } from "../actions";
+import PortfolioLandingPage from "@/components/site/home/portfolio-landing-page";
+import MapFilters from "@/components/site/map/map-filters";
+import PropertyCarousel from "@/components/site/map/property-carousel";
+import PropertyDetailPanel from "@/components/site/map/property-detail-panel";
+import { MapProvider } from "@/components/site/map/map-provider";
+import Navbar from "@/components/site/navbar";
+import { shouldUsePortfolioLandingPage } from "@/lib/listing-flags";
 
 const PropertyMap = dynamic(
   () => import("@/components/site/map/property-map"),
   {
-    // ssr: false,
     loading: () => (
-      <div className="w-full h-full bg-zinc-100 flex items-center justify-center text-zinc-400">
+      <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-sm text-zinc-500">
         Loading map...
       </div>
     ),
   },
 );
-
-import MapFilters from "@/components/site/map/map-filters";
-import PropertyCarousel from "@/components/site/map/property-carousel";
-import PropertyDetailPanel from "@/components/site/map/property-detail-panel";
 
 export default async function SubdomainPage({
   params,
@@ -34,19 +33,22 @@ export default async function SubdomainPage({
     notFound();
   }
 
-  const firstOrg = data.listing?.organization;
-  const orgName =
-    firstOrg?.title || subdomain.charAt(0).toUpperCase() + subdomain.slice(1);
-  const orgLogo = firstOrg?.logo || null;
+  if (shouldUsePortfolioLandingPage(data)) {
+    return <PortfolioLandingPage data={data} subdomain={subdomain} />;
+  }
 
+  const organization = data.listing.organization;
+  const orgName =
+    organization?.title ||
+    subdomain.charAt(0).toUpperCase() + subdomain.slice(1);
+  const orgLogo = organization?.logo || null;
   const showContact =
     data.show_contact_form || data.show_phone || data.show_email;
-
   const properties = data.properties || [];
-  const orgCountry = firstOrg?.country || "US"; // default to US if not found
+  const orgCountry = organization?.country || "US";
 
   return (
-    <div className="h-screen bg-zinc-50 flex flex-col font-sans overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden bg-zinc-50 font-sans text-zinc-950">
       <Navbar
         orgName={orgName}
         orgLogo={orgLogo}
@@ -55,18 +57,19 @@ export default async function SubdomainPage({
       />
 
       <MapProvider properties={properties} orgCountry={orgCountry}>
-        <main className="flex-1 relative flex overflow-hidden">
-          {/* Left Side: Map + Filters + Carousel */}
-          <div className="flex-1 relative">
+        <main
+          id="listings"
+          className="relative flex min-h-0 flex-1 overflow-hidden"
+        >
+          <div className="relative min-w-0 flex-1">
             <MapFilters />
-            <PropertyMap organization={data.listing.organization} />
+            <PropertyMap organization={organization} />
             <PropertyCarousel />
           </div>
 
-          {/* Right Side: Detail Panel */}
           <PropertyDetailPanel
             subdomain={subdomain}
-            organization={data.listing.organization}
+            organization={organization}
           />
         </main>
       </MapProvider>

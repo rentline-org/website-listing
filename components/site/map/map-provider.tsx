@@ -3,14 +3,18 @@
 import React, {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   ReactNode,
 } from "react";
 
 import { IProperty } from "@/lib/types";
-
-type ListingMode = "sale" | "rent";
+import {
+  getAvailableCities,
+  getPropertyPriceForIntent,
+  getPropertySearchText,
+} from "@/lib/property";
 
 interface MapContextType {
   allProperties: IProperty[];
@@ -24,11 +28,11 @@ interface MapContextType {
   propertyType: string;
   setPropertyType: (type: string) => void;
 
-  listingMode: ListingMode;
-  setListingMode: (mode: ListingMode) => void;
-
   priceInput: string;
   setPriceInput: (value: string) => void;
+
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
 
   minBedrooms: number;
   setMinBedrooms: (beds: number) => void;
@@ -40,29 +44,6 @@ interface MapContextType {
 }
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
-
-function getPropertyPrice(
-  property: IProperty,
-  mode: ListingMode,
-): number | null {
-  if (mode === "sale") {
-    if (property.sale_price != null) {
-      return property.sale_price;
-    }
-
-    const saleUnit = property.units?.find(
-      (u) => u.is_available && u.sale_price != null,
-    );
-
-    return saleUnit?.sale_price ?? null;
-  }
-
-  const rentUnit = property.units?.find(
-    (u) => u.is_available && u.rent_price != null,
-  );
-
-  return rentUnit?.rent_price ?? null;
-}
 
 export function MapProvider({
   properties,
@@ -79,24 +60,72 @@ export function MapProvider({
 
   const [propertyType, setPropertyType] = useState("all");
 
-  const [listingMode, setListingMode] = useState<ListingMode>("sale");
-
   const [priceInput, setPriceInput] = useState("");
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [minBedrooms, setMinBedrooms] = useState(0);
 
   const [city, setCity] = useState<string | null>(null);
 
+  useEffect(() => {
+    const syncFromHash = () => {
+      const hash = window.location.hash.replace("#", "");
+
+      if (
+        hash === "all" ||
+        hash === "single_unit" ||
+        hash === "multi_unit" ||
+        hash === "land"
+      ) {
+        setPropertyType(hash);
+      }
+    };
+
+    const handlePropertyTypeChange = (event: Event) => {
+      const nextPropertyType = (
+        event as CustomEvent<{ propertyType?: string }>
+      ).detail?.propertyType;
+
+      if (
+        nextPropertyType === "all" ||
+        nextPropertyType === "single_unit" ||
+        nextPropertyType === "multi_unit" ||
+        nextPropertyType === "land"
+      ) {
+        setPropertyType(nextPropertyType);
+      }
+    };
+
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    window.addEventListener("map-property-type-change", handlePropertyTypeChange);
+
+    return () => {
+      window.removeEventListener("hashchange", syncFromHash);
+      window.removeEventListener(
+        "map-property-type-change",
+        handlePropertyTypeChange,
+      );
+    };
+  }, []);
+
   const citiesList = useMemo(() => {
-    return [
-      ...new Set(properties.map((p) => p.city?.trim()).filter(Boolean)),
-    ].sort();
+    return getAvailableCities(properties);
   }, [properties]);
 
   const filteredProperties = useMemo(() => {
     const parsedPrice = Number(priceInput.replace(/,/g, ""));
+    const normalizedSearchQuery = searchQuery.trim().toLowerCase();
 
     return properties.filter((property) => {
+      if (
+        normalizedSearchQuery &&
+        !getPropertySearchText(property).includes(normalizedSearchQuery)
+      ) {
+        return false;
+      }
+
       if (propertyType !== "all" && property.property_type !== propertyType) {
         return false;
       }
@@ -116,7 +145,7 @@ export function MapProvider({
       }
 
       if (priceInput.trim() !== "" && !Number.isNaN(parsedPrice)) {
-        const price = getPropertyPrice(property, listingMode);
+        const price = getPropertyPriceForIntent(property, "all");
 
         if (price == null || price > parsedPrice) {
           return false;
@@ -125,7 +154,14 @@ export function MapProvider({
 
       return true;
     });
-  }, [properties, propertyType, listingMode, priceInput, minBedrooms, city]);
+  }, [
+    properties,
+    propertyType,
+    priceInput,
+    searchQuery,
+    minBedrooms,
+    city,
+  ]);
 
   return (
     <MapContext.Provider
@@ -141,11 +177,11 @@ export function MapProvider({
         propertyType,
         setPropertyType,
 
-        listingMode,
-        setListingMode,
-
         priceInput,
         setPriceInput,
+
+        searchQuery,
+        setSearchQuery,
 
         minBedrooms,
         setMinBedrooms,

@@ -152,7 +152,6 @@ export default function PropertyCarousel() {
           {cards.map((property) => {
             const isSelected = selectedProperty?.id === property.id;
             const units = property.units || [];
-            const firstUnit = getPrimaryUnit(property);
 
             const thumbnailUrl = getThumbnailUrl(property);
             const priceDisplay = getPropertyPriceLabel(property);

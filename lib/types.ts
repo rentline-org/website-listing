@@ -88,6 +88,7 @@ export interface ICustomListing {
   headline: string | null;
   is_published: boolean;
   use_organization_defaults: boolean;
+  use_portfolio_landing_page?: boolean | null;
   show_contact_form: boolean;
   show_phone: boolean;
   show_email: boolean;

@@ -11,7 +11,6 @@ import {
   SheetContent,
   SheetDescription,
   SheetHeader,
-  SheetTitle,
 } from "@/components/ui/sheet";
 import {
   X,
@@ -20,16 +19,10 @@ import {
   Maximize,
   Layers,
   MessageCircle,
-  Calendar,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
 } from "lucide-react";
-import {
-  formatPropertyType,
-  formatAddress,
-  getPropertyPriceDisplay,
-} from "@/lib/format";
 import Image from "next/image";
 import Link from "next/link";
 import { getPropertyIcon } from "@/lib/utils";
@@ -42,7 +35,6 @@ import {
 } from "@/components/ui/tooltip";
 
 export default function PropertyDetailPanel({
-  subdomain,
   organization,
 }: {
   subdomain: string;
@@ -95,7 +87,6 @@ export default function PropertyDetailPanel({
   const isMultiUnit = selectedProperty.property_type === "multi_unit";
   const units = selectedProperty.units || [];
   const firstUnit = units[0];
-  const priceDisplay = getPropertyPriceDisplay(selectedProperty);
   const mainImage = gallery[currentImageIndex]?.url;
   const thumbnails = gallery.slice(0, 6);
 
@@ -137,27 +128,27 @@ export default function PropertyDetailPanel({
                 {isMultiUnit
                   ? "Multi Unit"
                   : selectedProperty.property_type === "single_unit"
-                    ? units[0].unit_type
+                    ? firstUnit?.unit_type || "Home"
                     : "Land"}
               </Badge>
               {isMultiUnit && selectedProperty.sale_price && (
                 <Badge variant="secondary">{selectedProperty.sale_price}</Badge>
               )}
-              {!isMultiUnit && units[0].sale_price && (
+              {!isMultiUnit && firstUnit?.sale_price && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge variant="secondary">
-                      {formatMoney(units[0].sale_price, organization.country)}
+                      {formatMoney(firstUnit.sale_price, organization.country)}
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">Purchase Price</TooltipContent>
                 </Tooltip>
               )}
-              {!isMultiUnit && units[0].rent_price && (
+              {!isMultiUnit && firstUnit?.rent_price && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge variant="secondary">
-                      {formatMoney(units[0].rent_price, organization.country)}
+                      {formatMoney(firstUnit.rent_price, organization.country)}
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>Rent Price</TooltipContent>
@@ -346,7 +337,7 @@ export default function PropertyDetailPanel({
           <div className="p-4 border-t border-zinc-200 bg-white  gap-3 shrink-0 shadow-[0_-4px_6px_-1px_rgb(0_0_0/0.05)]">
             <Button className="w-full font-semibold py-6" size="lg" asChild>
               <Link
-                href={`/${subdomain}/contact?property=${selectedProperty.slug}`}
+                href={`/contact?property=${selectedProperty.slug}`}
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Contact

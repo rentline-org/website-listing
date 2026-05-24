@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Building2 } from "lucide-react";
@@ -7,14 +8,12 @@ interface HeroSectionProps {
   headline: string;
   propertiesCount: number;
   showContact: boolean;
-  subdomain: string;
 }
 
 export default function HeroSection({
   headline,
   propertiesCount,
   showContact,
-  subdomain,
 }: HeroSectionProps) {
   return (
     <section className="relative px-4 pt-28 pb-32 md:pt-36 md:pb-44 flex items-center justify-center overflow-hidden">
@@ -61,7 +60,7 @@ export default function HeroSection({
               className="rounded-full w-full sm:w-auto text-base h-13 px-8 border-white/20 text-white hover:bg-white/10 font-medium"
               asChild
             >
-              <a href={`/${subdomain}/contact`}>Get in Touch</a>
+              <Link href="/contact">Get in Touch</Link>
             </Button>
           )}
         </div>
